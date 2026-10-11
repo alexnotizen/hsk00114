@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BÀI 14 – NGỮ PHÁP - Flashcard</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,"Microsoft YaHei",sans-serif;
+  background:#fdfbf7;
+  display:flex; justify-content:center; color:#202124;
+}
+.app{width:min(860px,96vw); padding:30px 0 40px}
+h1{text-align:center;margin:0 0 15px;font-size:32px; font-weight: bold;}
+.progress{text-align:center;font-size:18px;color:#444;margin-bottom:20px; font-weight: bold;}
+.card-wrap{perspective:1200px; cursor:pointer}
+.card{
+  width:100%; height:592px; position:relative; transform-style:preserve-3d;
+  transition:transform .55s ease;
+}
+.card.flipped{transform:rotateY(180deg)}
+.face{
+  position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  border-radius:24px; background:white; box-shadow:0 15px 45px rgba(0,0,0,.15);
+  display:flex; flex-direction:column; padding:36px; border:3px solid #eee; overflow-y:auto;
+}
+.front{justify-content:flex-start; align-items:flex-start; text-align:left}
+.back{transform:rotateY(180deg); text-align:left; align-items:flex-start; justify-content:flex-start; padding-top:40px;}
+
+.hl{color: #7c2d12; font-weight: bold; background-color: #fef08a; padding: 2px 6px; border-radius: 4px; border: 1px solid #eab308;}
+.hl-blue { color: #ffffff; font-weight: bold; background-color: #2563eb; padding: 2px 6px; border-radius: 4px; }
+.hl-red { color: #dc2626; font-weight: bold; }
+
+/* Pinyin mặt trước: căn giữa */
+.pinyin{
+  font-size:1.55em;
+  color:#666666;
+  margin-bottom:12px;
+  font-weight:bold;
+  text-align:center;
+  width:100%;
+}
+
+.zh-front { font-size: 2em; font-weight: bold; margin-bottom: 8px; line-height: 1.3; color: #dc2626; text-align: center; width: 100%; }
+
+/* Mặt sau */
+.zh-back { color: #2563eb; font-weight: bold; font-size: 1.65em; line-height: 1.2; display: inline-block; margin-top: 10px; margin-bottom: 2px; }
+.pinyin-back { color: #666666; font-weight: bold; font-size: 1.05em; display: block; margin: 2px 0; }
+.vi-back { font-size: 1.05em; color: #333; display: block; margin-bottom: 14px; }
+
+.desc-front { font-size: 1.2em; color: #333; margin: 12px 0; text-align: left; width: 100%; line-height: 1.5; }
+.desc{font-size: 1.3em; color: #333; margin: 0; text-align: left; width: 100%; line-height: 1.45;}
+
+.controls{display:flex;gap:20px;justify-content:center;margin-top:30px}
+button{
+  border:0;border-radius:20px;padding:20px 35px;font-size:22px;
+  cursor:pointer;background:#e9eef7;color:#233044; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,.1);
+}
+button.primary{background:#2563eb;color:white}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <h1 id="title">BÀI 14 – NGỮ PHÁP</h1>
+  <div class="progress" id="progress"></div>
+
+  <div class="card-wrap" id="cardWrap" onclick="flipCard()">
+    <div class="card" id="card">
+      <div class="face front" id="frontFace"></div>
+      <div class="face back" id="backFace"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="event.stopPropagation();prevCard()">← TRƯỚC</button>
+    <button class="primary" onclick="event.stopPropagation();flipCard()">LẬT THẺ</button>
+    <button onclick="event.stopPropagation();nextCard()">TIẾP →</button>
+  </div>
+</div>
+
+<script>
+const cards = [
+  // THẺ 1: RỒI 了
+  {
+    f: "<div style='text-align:center; width:100%; font-size:1.6em; font-weight:bold; color:#dc2626; margin-bottom:5px;'>RỒI 了</div>" +
+       "<div class='zh-front'>我看<span class='hl-blue'>了</span>一个电影</div>" +
+       "<div class='pinyin'>Wǒ kàn le yí gè diànyǐng</div>" +
+       "<div class='desc-front' style='font-size: 1.35em;'>" +
+       "<b>Động từ + <span class='hl-red'>了</span> + Tân ngữ</b><br><br>" +
+       "Trợ từ <span class='hl-red'>了</span> đặt sau động từ để diễn tả hành động đã hoàn thành trong quá khứ." +
+       "</div>",
+    b: "<div class='desc' style='line-height:1.5;'>" +
+       "<span class='zh-back'>我看了一个电影。</span><br><span class='pinyin-back'>Wǒ kàn le yí gè diànyǐng.</span><span class='vi-back'>Tôi đã xem một bộ phim.</span>" +
+       "<span class='zh-back'>我买了一个新电脑。</span><br><span class='pinyin-back'>Wǒ mǎi le yí gè xīn diànnǎo.</span><span class='vi-back'>Tôi đã mua một chiếc máy tính mới.</span>" +
+       "<span class='zh-back'>我昨天没去商店买东西。</span><br><span class='pinyin-back'>Wǒ zuótiān méi qù shāngdiàn mǎi dōngxī.</span><span class='vi-back'>Hôm qua tôi đã không đi cửa hàng mua đồ.</span>" +
+       "<span class='zh-back'>A: 你去哪儿了？</span><br><span class='pinyin-back'>A: Nǐ qù nǎ'er le?</span><span class='vi-back'>A: Dạo này bạn đã đi đâu đấy?</span>" +
+       "<span class='zh-back'>B: 我今天有课，去学校上了课，还在那儿吃了午饭。</span><br><span class='pinyin-back'>B: Wǒ jīntiān yǒu kè, qù xuéxiào shàng le kè, hái zài nà'er chī le wǔfàn.</span><span class='vi-back'>B: Hôm nay tôi có tiết, đến trường lên lớp rồi, còn ăn trưa ở đó nữa.</span>" +
+       "<span class='zh-back'>A: 我昨天看了电影，没去超市。你呢？</span><br><span class='pinyin-back'>A: Wǒ zuótiān kàn le diànyǐng, méi qù chāoshì. Nǐ ne?</span><span class='vi-back'>A: Hôm qua tôi đã xem phim, không đi siêu thị. Còn bạn thì sao?</span>" +
+       "<span class='zh-back'>B: 我昨天去了超市，没看电影。</span><br><span class='pinyin-back'>B: Wǒ zuótiān qù le chāoshì, méi kàn diànyǐng.</span><span class='vi-back'>B: Hôm qua tôi đã đi siêu thị, không xem phim.</span>" +
+       "</div>"
+  },
+
+  // THẺ 2: TỪ LY HỢP (离合词)
+  {
+    f: "<div style='text-align:center; width:100%; font-size:1.6em; font-weight:bold; margin-bottom:5px;'></div>" +
+       "<div class='zh-front'>上<span class='hl-blue'>中文</span>课</div>" +
+       "<div class='pinyin'>shàng zhōngwén kè</div>" +
+       "<div class='desc-front' style='font-size: 1.35em;'>" +
+       "<b>Tách từ ly hợp để chèn thành phần phụ</b><br><br>" +
+       "Bình thường là một từ hoàn chỉnh, nhưng khi muốn thêm số lượng, thời gian, trạng thái vào giữa, chúng sẽ tách ra.<br>" +
+       "<i>Thường gặp:</i> 上课, 下课, 上班, 下班, 说话, 读书, 睡觉, 看病, 生病." +
+       "</div>",
+    b: "<div class='desc' style='line-height:1.5;'>" +
+       "<span class='zh-back'>睡了觉 / 睡了一觉</span><br><span class='pinyin-back'>shuì le jiào / shuì le yí jiào</span><span class='vi-back'>đã ngủ / đã ngủ một giấc</span>" +
+       "<span class='zh-back'>上了课 / 上中文课</span><br><span class='pinyin-back'>shàng le kè / shàng zhōngwén kè</span><span class='vi-back'>đã lên lớp / học tiết tiếng Trung</span>" +
+       "<span class='zh-back'>下了班</span><br><span class='pinyin-back'>xià le bān</span><span class='vi-back'>đã tan làm</span>" +
+       "<span class='zh-back'>生了病 / 生了大病</span><br><span class='pinyin-back'>shēng le bìng / shēng le dà bìng</span><span class='vi-back'>đã bị ốm / bị ốm nặng</span>" +
+       "<span class='zh-back'>说了话 / 说了很多话</span><br><span class='pinyin-back'>shuō le huà / shuō le hěn duō huà</span><span class='vi-back'>đã nói chuyện / đã nói rất nhiều chuyện</span>" +
+       "</div>"
+  },
+
+  // THẺ 3: ĐỀU ( 都 )
+  {
+    f: "<div style='text-align:center; width:100%; font-size:1.6em; font-weight:bold; margin-bottom:5px;'>ĐỀU 都</div>" +
+       "<div class='zh-front'>我们<span class='hl-blue'>都</span>会写了</div>" +
+       "<div class='pinyin'>Wǒmen dōu huì xiě le</div>" +
+       "<div class='desc-front' style='font-size: 1.35em;'>" +
+       "<b>Quy tắc sử dụng chữ 都</b><br><br>" +
+       "• <b>Quy tắc 1:</b> Đối tượng (người/vật) phải đặt <u>TRƯỚC</u> chữ 都.<br>" +
+       "• <b>Quy tắc 2:</b> Khi phủ định, chữ phủ định (没, 不) phải đặt <u>SAU</u> chữ 都." +
+       "</div>",
+    b: "<div class='desc' style='line-height:1.5;'>" +
+       "<span class='zh-back'>我们都会写了。</span><br><span class='pinyin-back'>Wǒmen dōu huì xiě le.</span><span class='vi-back'>Chúng em đều biết viết rồi.</span>" +
+       "<span class='zh-back'>我和我的朋友们都去。</span><br><span class='pinyin-back'>Wǒ hé wǒ de péngyǒumen dōu qù.</span><span class='vi-back'>Tôi và bạn bè tôi đều đi.</span>" +
+       "<span class='zh-back'>同学们都没听见。</span><br><span class='pinyin-back'>Tóngxuémen dōu méi tīngjiàn.</span><span class='vi-back'>Các bạn học sinh đều không nghe thấy.</span>" +
+       "<span class='zh-back'>他没听见老师说什么。</span><br><span class='pinyin-back'>Tā méi tīngjiàn lǎoshī shuō shénme.</span><span class='vi-back'>Cậu ấy đã không nghe thấy cô giáo nói gì.</span>" +
+       "<span class='zh-back'>A: 你们昨天在车上做什么了？</span><br><span class='pinyin-back'>A: Nǐmen zuótiān zài chē shàng zuò shénme le?</span><span class='vi-back'>A: Hôm qua các bạn đã làm gì trên xe?</span>" +
+       "<span class='zh-back'>B: 我看了一本书，有的人在睡觉。</span><br><span class='pinyin-back'>B: Wǒ kàn le yì běn shū, yǒu de rén zài shuìjiào.</span><span class='vi-back'>B: Tôi đã đọc một cuốn sách, có vài người đang ngủ.</span>" +
+       "<span class='zh-back'>刘明：明年上学后，他们都忙了。</span><br><span class='pinyin-back'>Liú Míng: Míngnián shàngxué hòu, tāmen dōu máng le.</span><span class='vi-back'>Lưu Minh: Sau khi đi học vào năm sau, bọn trẻ đều bận rộn.</span>" +
+       "</div>"
+  }
+];
+
+let idx = 0;
+
+function render() {
+  document.getElementById('frontFace').innerHTML = cards[idx].f;
+  document.getElementById('backFace').innerHTML = cards[idx].b;
+  document.getElementById('progress').innerText = `Thẻ ${idx + 1} / ${cards.length}`;
+}
+
+function flipCard() {
+  document.getElementById('card').classList.toggle('flipped');
+}
+
+function nextCard() {
+  idx = (idx + 1) % cards.length;
+  document.getElementById('card').classList.remove('flipped');
+  render();
+}
+
+function prevCard() {
+  idx = (idx - 1 + cards.length) % cards.length;
+  document.getElementById('card').classList.remove('flipped');
+  render();
+}
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    nextCard();
+    event.preventDefault();
+  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    prevCard();
+    event.preventDefault();
+  } else if (event.key === ' ' || event.key === 'Enter') {
+    flipCard();
+    event.preventDefault();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

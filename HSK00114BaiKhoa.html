@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BÀI 14 - BÀI KHÓA</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,"Microsoft YaHei",sans-serif;
+  background:linear-gradient(135deg,#eef4ff,#f9fbff);
+  display:flex; justify-content:center; color:#202124;
+}
+.app{width:min(900px,96vw); padding:20px 0 30px}
+h1{text-align:center;margin:0 0 6px;font-size:32px}
+.subtitle{text-align:center;color:#666;margin-bottom:14px;font-size:18px}
+.progress{text-align:center;font-size:18px;color:#666;margin-bottom:12px}
+.card-wrap{perspective:1200px; cursor:pointer}
+.card{
+  width:100%; height:750px; position:relative; transform-style:preserve-3d;
+  transition:transform .55s ease;
+}
+.card.flipped{transform:rotateY(180deg)}
+.face{
+  position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  border-radius:24px; background:white; box-shadow:0 12px 35px rgba(30,60,100,.15);
+  display:flex; flex-direction:column; justify-content:space-between;
+  padding:32px 36px; border:1px solid #e6eaf0; overflow:hidden;
+}
+.back{transform:rotateY(180deg)}
+
+.card-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.context-title {
+  font-weight: bold;
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #2c3e50;
+  line-height: 1.5;
+  border-bottom: 2px solid #edf2f7;
+  padding-bottom: 12px;
+}
+.dialogue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.dialogue-table td {
+  vertical-align: top;
+  padding: 10px 0;
+}
+.speaker-col {
+  width: 140px;
+  color: #000000;
+  font-weight: bold;
+  font-size: 24px;
+  white-space: nowrap;
+}
+.speaker-col-front {
+  width: 140px;
+  color: #718096;
+  font-weight: bold;
+  font-size: 40.5px;
+  white-space: nowrap;
+}
+.speech-col {
+  color: #e53e3e;
+  font-weight: bold;
+  font-size: 40.5px;
+  line-height: 1.5;
+}
+.speech-col-back {
+  color: #e53e3e;
+  font-weight: bold;
+  font-size: 27px;
+  line-height: 1.5;
+}
+.pinyin-block {
+  color: #718096;
+  font-weight: bold;
+  font-size: 22px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  display: block;
+}
+.meaning-text {
+  font-size: 21px;
+  color: #4b5563;
+  font-weight: normal;
+  margin-top: 4px;
+}
+
+.audio-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  vertical-align: middle;
+}
+.audio-btn:hover {
+  background-color: #edf2f7;
+}
+
+.hint{color:#888; font-size:18px; text-align:center; margin-top:14px}
+.controls{display:flex;gap:16px;justify-content:center;margin-top:22px}
+button{
+  border:0;border-radius:14px;padding:16px 26px;font-size:20px;
+  cursor:pointer;background:#e9eef7;color:#233044;
+}
+button.primary{background:#2563eb;color:white}
+button:hover{filter:brightness(.97)}
+.extra{display:flex;justify-content:center;gap:10px;margin-top:14px}
+.shuffle{background:#e9f8ef}
+
+@media(max-width:600px){
+ .app{padding-top:16px}.card{height:780px}
+ .face{padding:22px 20px}
+ .context-title{font-size:18px; margin-bottom:14px}
+ .speaker-col{width:100px; font-size:18px}
+ .speaker-col-front{width:100px; font-size:30px}
+ .speech-col{font-size:30px}
+ .speech-col-back{font-size:20px}
+ .pinyin-block{font-size:17px;}
+ .meaning-text{font-size:16px}
+ .controls button{padding:12px 16px; font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🇨🇳 BÀI 14 - BÀI KHÓA</h1>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="card-wrap" id="cardWrap" onclick="flipCard()">
+    <div class="card" id="card">
+      <div class="face front">
+        <div class="card-content" id="frontContent"></div>
+      </div>
+      <div class="face back">
+        <div class="card-content" id="backContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="event.stopPropagation();prevCard()">← Trước</button>
+    <button class="primary" onclick="event.stopPropagation();flipCard()">Lật thẻ</button>
+    <button onclick="event.stopPropagation();nextCard()">Tiếp →</button>
+  </div>
+  <div class="extra">
+    <button class="shuffle" onclick="event.stopPropagation();shuffleCards()">🔀 Trộn thẻ</button>
+  </div>
+</div>
+
+<script>
+const originalCards = [
+  {
+    "frontContext": "BÀI KHÓA 1: Trong lớp học, sau giờ học, Bạch Gia Nguyệt (Bái Jiāyuè) và Trần Thiên Trung (Chén Tiānzhōng) đang bàn luận về chuyến dã ngoại ngoài giờ học lần trước.",
+    "frontLines": [
+      { "speaker": "白家月:", "speech": "你们上火车后看见王老师了吗？" },
+      { "speaker": "陈天中:", "speech": "没看见。中午车开后，有些人在看书，有些人睡觉了。" },
+      { "speaker": "白家月:", "speech": "你呢？" },
+      { "speaker": "陈天中:", "speech": "我看了一个电影。" }
+    ],
+    "backLines": [
+      { "speaker": "白家月:", "speech": "你们上火车后看见王老师了吗？", "pinyin": "Nǐmen shàng huǒchē hòu kànjiàn Wáng lǎoshī le ma?", "meaning": "Các bạn lên tàu hỏa rồi có nhìn thấy cô Vương không?" },
+      { "speaker": "陈天中:", "speech": "没看见。中午车开后，有些人在看书，有些人睡觉了。", "pinyin": "Méi kànjiàn. Zhōngwǔ chē kāi hòu, yǒuxiē rén zài kàn shū, yǒuxiē rén shuìjiào le.", "meaning": "Không thấy. Buổi trưa sau khi tàu khởi hành, người thì đang đọc sách, người thì đã ngủ." },
+      { "speaker": "白家月:", "speech": "你呢？", "pinyin": "Nǐ ne?", "meaning": "Còn bạn thì sao?" },
+      { "speaker": "陈天中:", "speech": "我看了一个电影。", "pinyin": "Wǒ kànle yí gè diànyǐng.", "meaning": "Tôi đã xem một bộ phim." }
+    ]
+  },
+  {
+    "frontContext": "BÀI KHÓA 2: Trong lớp học, Vương Nhất Phi (Wáng Yīfēi) hỏi thăm tình hình học tập của học sinh.",
+    "frontLines": [
+      { "speaker": "王一飞:", "speech": "你们会说汉语了，也会写汉字了吗？" },
+      { "speaker": "白家月:", "speech": "我们都会写了。" },
+      { "speaker": "陈天中:", "speech": "老师，我听不见。" },
+      { "speaker": "王一飞:", "speech": "请大家不要说话！请听老师的问题：你们都会写哪些汉字了？" },
+      { "speaker": "陈天中:", "speech": "我会写这些字了，您看！" }
+    ],
+    "backLines": [
+      { "speaker": "王一飞:", "speech": "你们会说汉语了，也会写汉字了吗？", "pinyin": "Nǐmen huì shuō Hànyǔ le, yě huì xiě Hànzì le ma?", "meaning": "Các em đã biết nói tiếng Hán rồi, cũng biết viết chữ Hán rồi phải không?" },
+      { "speaker": "白家月:", "speech": "我们都会写了。", "pinyin": "Wǒmen dōu huì xiě le.", "meaning": "Chúng em đều biết viết rồi." },
+      { "speaker": "陈天中:", "speech": "老师，我听不见。", "pinyin": "Lǎoshī, wǒ tīng bú jiàn.", "meaning": "Thưa cô, em không nghe thấy." },
+      { "speaker": "王一飞:", "speech": "请大家不要说话！请听老师的问题：你们都会写哪些汉字了？", "pinyin": "Qǐng dàjiā búyào shuōhuà! Qǐng tīng lǎoshī de wèntí: Nǐmen dōu huì xiě nǎxiē Hànzì le?", "meaning": "Mọi người xin đừng nói chuyện! Hãy nghe câu hỏi của cô: Các em biết viết những chữ Hán nào rồi?" },
+      { "speaker": "陈天中:", "speech": "我会写这些字了，您看！", "pinyin": "Wǒ huì xiě zhèxiē zì le, nín kàn!", "meaning": "Em biết viết những chữ này rồi, cô xem này!" }
+    ]
+  },
+  {
+    "frontContext": "BÀI KHÓA 3: Ở nhà, Lưu Minh (Liú Míng) và Vương Nhất Tuyết (Wáng Yīxuě) đang bàn luận về việc con cái đi học.",
+    "frontLines": [
+      { "speaker": "刘明:", "speech": "明年女儿上中学。" },
+      { "speaker": "王一雪:", "speech": "对。儿子也上小学了。" },
+      { "speaker": "刘明:", "speech": "我们家有了一个中学生。" },
+      { "speaker": "王一雪:", "speech": "还有了一个小学生。" },
+      { "speaker": "刘明:", "speech": "上学后，他们都忙了。" },
+      { "speaker": "王一雪:", "speech": "是的。太晚了，睡觉吧。" }
+    ],
+    "backLines": [
+      { "speaker": "刘明:", "speech": "明年女儿上中学。", "pinyin": "Míngnián nǚ'ér shàng zhōngxué.", "meaning": "Năm sau con gái lên trung học." },
+      { "speaker": "王一雪:", "speech": "对。儿子也上小学了。", "pinyin": "Duì. Érzi yě shàng xiǎoxué le.", "meaning": "Đúng vậy. Con trai cũng lên tiểu học rồi." },
+      { "speaker": "刘明:", "speech": "我们家有了一个中学生。", "pinyin": "Wǒmen jiā yǒule yí gè zhōngxuéshēng.", "meaning": "Nhà chúng ta có một học sinh trung học rồi." },
+      { "speaker": "王一雪:", "speech": "还有了一个小学生。", "pinyin": "Hái yǒule yí gè xiǎoxuéshēng.", "meaning": "Còn có thêm một học sinh tiểu học nữa." },
+      { "speaker": "刘明:", "speech": "上学后，他们都忙了。", "pinyin": "Shàngxué hòu, tāmen dōu máng le.", "meaning": "Sau khi đi học, bọn trẻ đều bận rộn rồi." },
+      { "speaker": "王一雪:", "speech": "是的。太晚了，睡觉吧。", "pinyin": "Shì de. Tài wǎn le, shuìjiào ba.", "meaning": "Đúng vậy. Muộn quá rồi, đi ngủ thôi." }
+    ]
+  }
+];
+
+let cards = [...originalCards];
+let index = 0;
+let flipped = false;
+
+function speakText(event, text) {
+  event.stopPropagation();
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  } else {
+    alert('Trình duyệt của bạn không hỗ trợ tính năng phát âm.');
+  }
+}
+
+function render(){
+  const c = cards[index];
+  
+  let frontHtml = `<div class="context-title">${c.frontContext}</div><table class="dialogue-table">`;
+  c.frontLines.forEach(line => {
+    frontHtml += `
+      <tr>
+        <td class="speaker-col-front">${line.speaker}</td>
+        <td class="speech-col">
+          ${line.speech}
+          <button class="audio-btn" onclick="speakText(event, '${line.speech.replace(/'/g, "\\'")}')" title="Nghe phát âm">🔊</button>
+        </td>
+      </tr>`;
+  });
+  frontHtml += `</table>`;
+  document.getElementById('frontContent').innerHTML = frontHtml;
+
+  let backHtml = `<div class="context-title">${c.frontContext}</div><table class="dialogue-table">`;
+  c.backLines.forEach(line => {
+    backHtml += `
+      <tr>
+        <td class="speaker-col">${line.speaker}</td>
+        <td class="speech-col-back">
+          ${line.speech}
+          <button class="audio-btn" onclick="speakText(event, '${line.speech.replace(/'/g, "\\'")}')" title="Nghe phát âm">🔊</button>
+          <div class="pinyin-block">${line.pinyin}</div>
+          <div class="meaning-text">${line.meaning}</div>
+        </td>
+      </tr>`;
+  });
+  backHtml += `</table>`;
+  document.getElementById('backContent').innerHTML = backHtml;
+
+  document.getElementById('progress').textContent = `Thẻ ${index+1} / ${cards.length}`;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+}
+
+function flipCard(){
+  flipped = !flipped;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+}
+
+function nextCard(){
+  index = (index + 1) % cards.length;
+  flipped = false; render();
+}
+
+function prevCard(){
+  index = (index - 1 + cards.length) % cards.length;
+  flipped = false; render();
+}
+
+function shuffleCards(){
+  for(let i=cards.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [cards[i],cards[j]]=[cards[j],cards[i]];
+  }
+  index=0; flipped=false; render();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') nextCard();
+  else if(e.key==='ArrowLeft') prevCard();
+  else if(e.key===' ' || e.key==='Enter'){
+    e.preventDefault();
+    flipCard();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
